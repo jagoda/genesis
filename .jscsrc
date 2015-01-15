@@ -1,0 +1,94 @@
+{
+	"requireCurlyBraces" : [
+		"case", "catch", "default", "do", "else", "finally", "for", "if",
+		"switch", "try", "while"
+	],
+
+	"requireSpaceAfterKeywords" : [
+		"catch", "do", "else", "finally", "for", "if", "return", "switch",
+		"try", "while"
+	],
+
+	"requireSpaceBeforeBlockStatements"    : true,
+	"requireParenthesesAroundIIFE"         : true,
+	"requireSpacesInConditionalExpression" : true,
+
+	"requireSpacesInFunction" : {
+		"beforeOpeningRoundBrace" : true,
+		"beforeOpeningCurlyBrace" : true
+	},
+
+	"disallowMultipleVarDecl"         : true,
+	"requireBlocksOnNewline"          : true,
+	"disallowPaddingNewlinesInBlocks" : true,
+	"disallowEmptyBlocks"             : true,
+
+	"disallowSpacesInsideParentheses"   : true,
+	"requireSpacesInsideObjectBrackets" : "all",
+	"requireSpacesInsideArrayBrackets"  : "all",
+
+	"disallowQuotedKeysInObjects" : true,
+	"disallowDanglingUnderscores" : true,
+	"requireSpaceAfterObjectKeys" : true,
+	"requireCommaBeforeLineBreak" : true,
+	"requireAlignedObjectValues"  : "ignoreLineBreak",
+
+	"requireOperatorBeforeLineBreak" : [
+		"?", "=", "+", "-", "/", "*", "==", "===", "!=", "!==", ">", ">=", "<",
+		"<="
+	],
+
+	"disallowSpaceAfterPrefixUnaryOperators" : [
+		"++", "--", "+", "-", "~", "!"
+	],
+
+	"disallowSpaceBeforePostfixUnaryOperators" : [
+		"++", "--"
+	],
+
+	"disallowSpaceBeforeBinaryOperators" : [
+		","
+	],
+
+	"requireSpaceBeforeBinaryOperators" : [
+		"=", "+", "-", "/", "*", "==", "===", "!=", "!=="
+	],
+
+	"requireSpaceAfterBinaryOperators" : [
+		"=", ",", "+", "-", "/", "*", "==", "===", "!=", "!=="
+	],
+
+	"disallowImplicitTypeConversion" : [
+		"numeric", "boolean", "binary", "string"
+	],
+
+	"requireCamelCaseOrUpperCaseIdentifiers" : true,
+
+	"disallowKeywords" : [
+		"do", "with"
+	],
+
+	"disallowMultipleLineStrings" : true,
+	"disallowMultipleLineBreaks"  : true,
+	"validateLineBreaks"          : "LF",
+	"validateQuoteMarks"          : "\"",
+	"validateIndentation"         : "\t",
+	"disallowMixedSpacesAndTabs"  : "smart",
+	"disallowTrailingWhitespace"  : true,
+	"disallowTrailingComma"       : true,
+
+	"requireKeywordsOnNewLine" : [
+		"catch", "else", "finally"
+	],
+
+	"maximumLineLength"              : 100,
+	"requireCapitalizedConstructors" : true,
+
+	"safeContextKeyword" : [
+		"self", "that"
+	],
+
+	"requireDotNotation"                   : true,
+	"requireYodaConditions"                : true,
+	"disallowNewlineBeforeBlockStatements" : true
+}
