@@ -25,7 +25,6 @@
 
 	"disallowSpacesInsideParentheses"   : true,
 	"requireSpacesInsideObjectBrackets" : "all",
-	"requireSpacesInsideArrayBrackets"  : "all",
 
 	"disallowQuotedKeysInObjects" : true,
 	"disallowDanglingUnderscores" : true,
