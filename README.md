@@ -1,6 +1,8 @@
 genesis
 =======
 
+[![Build Status](https://travis-ci.org/jagoda/genesis.svg)](https://travis-ci.org/jagoda/genesis)
+
 > A simple library for creating data models in Node.
 
 	npm install genesis

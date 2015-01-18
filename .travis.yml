@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+- '0.11'
+- '0.10'
+deploy:
+  provider: npm
+  email: jeffrey.jagoda@gmail.com
+  api_key:
+    secure: b7CSx/G5K9hLT43crr5Am9EtrVcdxoAC+KYromxXgxzMLB5fRxNLm75V5ZYiB93ibr6L+EQao9Vz1L3nRqibzNLIZ4LA70Ov/lAz5L4DtBZ9XuoLKpnZ3CL5dZY0LvHjD/zKmGRgM8I293lT4Ec7jVF5/WkCeptBA69shmworVM=
+  on:
+    tags: true
+    repo: jagoda/genesis
