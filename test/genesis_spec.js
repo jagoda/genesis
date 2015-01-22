@@ -11,10 +11,16 @@ describe("The genesis library", function () {
 	});
 
 	describe("creating a basic model", function () {
-		var Test = Genesis.create();
+		var NAME = "test";
+
+		var Test = Genesis.create(NAME);
 
 		it("returns a constructor", function () {
 			expect(Test, "type").to.be.a("function");
+		});
+
+		it("includes a name", function () {
+			expect(Test, "name").to.have.property("modelName", NAME);
 		});
 	});
 
@@ -29,11 +35,14 @@ describe("The genesis library", function () {
 			key : Joi.string().valid("value").required()
 		}).required();
 
-		var Test = Genesis.create({
-			index   : index,
-			methods : methods,
-			schema  : schema
-		});
+		var Test = Genesis.create(
+			"test",
+			{
+				index   : index,
+				methods : methods,
+				schema  : schema
+			}
+		);
 
 		it("returns a constructor", function () {
 			expect(Test, "type").to.be.a("function");
@@ -71,10 +80,13 @@ describe("The genesis library", function () {
 				foo : Joi.string().valid("bar").required()
 			}).required();
 
-			var Subtest = Test.extend({
-				methods : extendedMethods,
-				schema  : extendedSchema
-			});
+			var Subtest = Test.extend(
+				"subtest",
+				{
+					methods : extendedMethods,
+					schema  : extendedSchema
+				}
+			);
 
 			it("returns a constructor", function () {
 				expect(Subtest, "type").to.be.a("function");
@@ -118,10 +130,13 @@ describe("The genesis library", function () {
 
 			var index = "foo";
 
-			var Subtest = Test.extend({
-				index  : index,
-				schema : extendedSchema
-			});
+			var Subtest = Test.extend(
+				"subtest",
+				{
+					index  : index,
+					schema : extendedSchema
+				}
+			);
 
 			it("returns a constructor", function () {
 				expect(Subtest, "type").to.be.a("function");
@@ -156,7 +171,7 @@ describe("The genesis library", function () {
 		});
 
 		describe("then extending it (default attributes)", function () {
-			var Subtest = Test.extend();
+			var Subtest = Test.extend("subtest");
 
 			it("returns a constructor", function () {
 				expect(Subtest, "type").to.be.a("function");

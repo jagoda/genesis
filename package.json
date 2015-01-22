@@ -23,6 +23,8 @@
   "dependencies": {
     "bluebird": "^2.6.4",
     "joi": "^5.1.0",
-    "lodash": "^2.4.1"
+    "lodash": "^2.4.1",
+    "mongodb": "^1.4.29",
+    "stream-consume": "^0.1.0"
   }
 }
