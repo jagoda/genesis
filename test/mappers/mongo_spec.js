@@ -3,6 +3,7 @@ var Bluebird    = require("bluebird");
 var Genesis     = require("../../");
 var MongoDB     = require("mongodb");
 var MongoMapper = require("../../lib/mappers/mongo");
+var Sinon       = require("sinon");
 
 var MongoClient = MongoDB.MongoClient;
 
@@ -13,6 +14,11 @@ Bluebird.promisifyAll(MongoDB);
 
 describe("A mongo mapper", function () {
 	var mapper = new MongoMapper();
+	var name   = "foo";
+
+	var Test = Genesis.create("test", { index : "name" });
+
+	var instance = new Test({ name : name });
 
 	function cleanup () {
 		return Bluebird.using(
@@ -81,11 +87,6 @@ describe("A mongo mapper", function () {
 
 		describe("from a model", function () {
 			describe("with an index", function () {
-				var NAME = "name";
-
-				var Test     = Genesis.create("test", { index : "name" });
-				var instance = new Test({ name : NAME });
-
 				var result;
 
 				before(function () {
@@ -104,7 +105,7 @@ describe("A mongo mapper", function () {
 				});
 
 				it("inserts the record in the database", function () {
-					return find("test", { name : NAME })
+					return find("test", { name : name })
 					.then(function (results) {
 						expect(results, "results").to.deep.equal([ instance ]);
 					});
@@ -112,7 +113,231 @@ describe("A mongo mapper", function () {
 			});
 
 			describe("without an index", function () {
-				it("fails");
+				var Test     = Genesis.create("test");
+				var instance = new Test();
+
+				var error;
+
+				before(function () {
+					return mapper.create(instance)
+					.catch(function (data) {
+						error = data;
+					});
+				});
+
+				after(function () {
+					return cleanup();
+				});
+
+				it("fails", function () {
+					expect(error, "type").to.be.an.instanceOf(Error);
+					expect(error.message, "message").to.contain("index");
+				});
+			});
+		});
+
+		describe("with a database error", function () {
+			var failure  = new Error("Simulated failure.");
+			var instance = new Test({ name : "foo" });
+
+			var error;
+
+			before(function () {
+				Sinon.stub(MongoDB.Collection.prototype, "insertAsync", function () {
+					return Bluebird.reject(failure);
+				});
+
+				return mapper.create(instance)
+				.catch(function (data) {
+					error = data;
+				});
+			});
+
+			after(function () {
+				MongoDB.Collection.prototype.insertAsync.restore();
+				return cleanup();
+			});
+
+			it("fails", function () {
+				expect(error, "type").to.be.an.instanceOf(Error);
+				expect(error.message, "message").to.contain(failure.message);
+			});
+		});
+	});
+
+	describe("creating an existing record", function () {
+		var instance = new Test({ name : "testy" });
+
+		var error;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function () {
+				return mapper.create(instance);
+			})
+			.catch(function (data) {
+				error = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("fails", function () {
+			expect(error, "type").to.be.an.instanceOf(Error);
+			expect(error.message, "message").to.contain("duplicate key");
+		});
+	});
+
+	describe("looking up multiple records", function () {
+		describe("with a query that doesn't match", function () {
+			var result;
+
+			before(function () {
+				return mapper.find(Test, { id : name })
+				.then(function (data) {
+					result = data;
+				});
+			});
+
+			it("returns an empty list", function () {
+				expect(result, "list").to.deep.equal([]);
+			});
+		});
+
+		describe("with a query that matches", function () {
+			var bar = new Test({ name : "bar" });
+			var foo = new Test({ name : "foo" });
+
+			var result;
+
+			before(function () {
+				return Bluebird.join(
+					mapper.create(bar),
+					mapper.create(foo),
+					function () {
+						return mapper.find(Test, { name : "foo" });
+					}
+				)
+				.then(function (data) {
+					result = data;
+				});
+			});
+
+			after(function () {
+				return cleanup();
+			});
+
+			it("returns all matching records", function () {
+				expect(result, "list").to.have.length(1);
+				expect(result[0], "record").to.deep.equal(foo);
+			});
+
+			it("returns model instances", function () {
+				result.forEach(function (record, index) {
+					expect(record, "record " + index).to.be.an.instanceOf(Test);
+				});
+			});
+		});
+
+		describe("with a database error", function () {
+			var failure = new Error("Simulated failure.");
+
+			var error;
+
+			before(function () {
+				Sinon.stub(MongoDB.Cursor.prototype, "toArrayAsync", function () {
+					return Bluebird.reject(failure);
+				});
+
+				return mapper.find(Test, {})
+				.catch(function (data) {
+					error = data;
+				});
+			});
+
+			after(function () {
+				MongoDB.Cursor.prototype.toArrayAsync.restore();
+			});
+
+			it("fails", function () {
+				expect(error, "type").to.be.an.instanceOf(Error);
+				expect(error.message, "message").to.contain(failure.message);
+			});
+		});
+	});
+
+	describe("looking up an individual record", function () {
+		describe("with a query that doesn't match", function () {
+			var result;
+
+			before(function () {
+				return mapper.findOne(Test, { id : name })
+				.then(function (data) {
+					result = data;
+				});
+			});
+
+			it("returns null", function () {
+				expect(result, "result").to.be.null;
+			});
+		});
+
+		describe("with a query that matches", function () {
+			var decoy = new Test({ name : "bar" });
+
+			var result;
+
+			before(function () {
+				return Bluebird.join(
+					mapper.create(instance),
+					mapper.create(decoy),
+					function () {
+						return mapper.findOne(Test, { name : name });
+					}
+				)
+				.then(function (data) {
+					result = data;
+				});
+			});
+
+			after(function () {
+				return cleanup();
+			});
+
+			it("returns the matching record", function () {
+				expect(result, "result").to.deep.equal(instance);
+			});
+
+			it("returns a model instance", function () {
+				expect(result, "type").to.be.an.instanceOf(Test);
+			});
+		});
+
+		describe("with a database error", function () {
+			var failure = new Error("Simulated failure.");
+
+			var error;
+
+			before(function () {
+				Sinon.stub(MongoDB.Collection.prototype, "findOneAsync", function () {
+					return Bluebird.reject(failure);
+				});
+
+				return mapper.findOne(Test, {})
+				.catch(function (data) {
+					error = data;
+				});
+			});
+
+			after(function () {
+				MongoDB.Collection.prototype.findOneAsync.restore();
+			});
+
+			it("fails", function () {
+				expect(error, "type").to.be.an.instanceOf(Error);
+				expect(error.message, "message").to.contain(failure.message);
 			});
 		});
 	});

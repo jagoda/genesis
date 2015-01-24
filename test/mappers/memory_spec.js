@@ -6,9 +6,11 @@ var MemoryMapper = require("../../lib/mappers/memory");
 var expect = require("chai").expect;
 
 describe("A memory mapper", function () {
+	var name = "foo";
+
 	var Test = Genesis.create("test", { index : "name" });
 
-	var instance = new Test({ name : "foo" });
+	var instance = new Test({ name : name });
 
 	describe("creating a new record", function () {
 		var mapper = new MemoryMapper();
@@ -97,7 +99,7 @@ describe("A memory mapper", function () {
 			var result;
 
 			before(function () {
-				return mapper.find(Test, { id : "foo" })
+				return mapper.find(Test, { id : name })
 				.then(function (data) {
 					result = data;
 				});
@@ -145,8 +147,6 @@ describe("A memory mapper", function () {
 	describe("looking up an individual record", function () {
 		var mapper = new MemoryMapper();
 
-		var instance = new Test({ name : "foo" });
-
 		before(function () {
 			return mapper.create(instance);
 		});
@@ -155,7 +155,7 @@ describe("A memory mapper", function () {
 			var result;
 
 			before(function () {
-				return mapper.findOne(Test, { name : "bar" })
+				return mapper.findOne(Test, { id : name })
 				.then(function (data) {
 					result = data;
 				});
@@ -170,7 +170,7 @@ describe("A memory mapper", function () {
 			var result;
 
 			before(function () {
-				return mapper.findOne(Test, { name : "foo" })
+				return mapper.findOne(Test, { name : name })
 				.then(function (data) {
 					result = data;
 				});
@@ -190,8 +190,6 @@ describe("A memory mapper", function () {
 	describe("updating a non-existant record", function () {
 		var mapper = new MemoryMapper();
 
-		var instance = new Test({ name : "foo" });
-
 		var failure;
 
 		before(function () {
@@ -210,14 +208,14 @@ describe("A memory mapper", function () {
 	describe("updating an existing record", function () {
 		var mapper = new MemoryMapper();
 
-		var instance = new Test({ age : 10, name : "foo" });
+		var instance = new Test({ age : 10, name : name });
 
 		before(function () {
 			return mapper.create(instance);
 		});
 
 		describe("with an object", function () {
-			var newInstance = { age : 13, name : "foo" };
+			var newInstance = { age : 13, name : name };
 
 			var failure;
 
@@ -235,7 +233,7 @@ describe("A memory mapper", function () {
 		});
 
 		describe("with a model", function () {
-			var newInstance = new Test({ age : 13, name : "foo" });
+			var newInstance = new Test({ age : 13, name : name });
 
 			var result;
 			var stored;
@@ -244,7 +242,7 @@ describe("A memory mapper", function () {
 				return mapper.update(newInstance)
 				.then(function (data) {
 					result = data;
-					return mapper.findOne(Test, { name : "foo" });
+					return mapper.findOne(Test, { name : name });
 				})
 				.then(function (data) {
 					stored = data;
@@ -264,8 +262,6 @@ describe("A memory mapper", function () {
 	describe("destroying a non-existant record", function () {
 		var mapper = new MemoryMapper();
 
-		var instance = new Test({ name : "foo" });
-
 		var failure;
 
 		before(function () {
@@ -284,14 +280,12 @@ describe("A memory mapper", function () {
 	describe("destroying an existing record", function () {
 		var mapper = new MemoryMapper();
 
-		var instance = new Test({ name : "foo" });
-
 		before(function () {
 			return mapper.create(instance);
 		});
 
 		describe("with an object", function () {
-			var instance = { name : "foo" };
+			var instance = { name : name };
 
 			var failure;
 
@@ -316,7 +310,7 @@ describe("A memory mapper", function () {
 				return mapper.destroy(instance)
 				.then(function (data) {
 					result = data;
-					return mapper.findOne(Test, { name : "foo" });
+					return mapper.findOne(Test, { name : name });
 				})
 				.then(function (data) {
 					stored = data;
@@ -334,13 +328,11 @@ describe("A memory mapper", function () {
 	});
 
 	describe("storing two different model types", function () {
-		var NAME = "test";
-
 		var Subtest = Test.extend("subtest");
 
 		var mapper = new MemoryMapper();
-		var subtest = new Subtest({ name : NAME, type : "subtest" });
-		var test    = new Test({ name : NAME, type : "test" });
+		var subtest = new Subtest({ name : name, type : "subtest" });
+		var test    = new Test({ name : name, type : "test" });
 
 		var subtestResult;
 		var testResult;
@@ -351,7 +343,7 @@ describe("A memory mapper", function () {
 				mapper.create(test)
 			])
 			.then(function () {
-				var query = { name : NAME };
+				var query = { name : name };
 
 				return Bluebird.all([
 					mapper.findOne(Subtest, query),
