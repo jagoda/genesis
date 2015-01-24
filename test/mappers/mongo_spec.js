@@ -341,4 +341,24 @@ describe("A mongo mapper", function () {
 			});
 		});
 	});
+
+	describe("updating a non-existant record", function () {
+		var error;
+
+		before(function () {
+			return mapper.update(instance)
+			.catch(function (data) {
+				error = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("fails", function () {
+			expect(error, "type").to.be.an.instanceOf(Error);
+			expect(error.message, "message").to.contain("foo");
+		});
+	});
 });
