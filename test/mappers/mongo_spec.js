@@ -358,7 +358,38 @@ describe("A mongo mapper", function () {
 
 		it("fails", function () {
 			expect(error, "type").to.be.an.instanceOf(Error);
-			expect(error.message, "message").to.contain("foo");
+			expect(error.message, "message").to.contain("does not exist");
+		});
+	});
+
+	describe("updating an existing record", function () {
+		var result;
+		var updated;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function (data) {
+				updated = new Test({ name : data.name, foo : "bar" });
+				return mapper.update(updated);
+			})
+			.then(function (data) {
+				result = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("returns the model", function () {
+			expect(result, "model").to.equal(updated);
+		});
+
+		it("inserts the record in the database", function () {
+			return find("test", { name : name })
+			.then(function (results) {
+				expect(results, "results").to.deep.equal([ updated ]);
+			});
 		});
 	});
 });
