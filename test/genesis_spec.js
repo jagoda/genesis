@@ -2,6 +2,7 @@
 var Genesis = require("..");
 var Joi     = require("joi");
 var Model   = require("../lib/model");
+var _       = require("lodash");
 
 var expect = require("chai").expect;
 
@@ -54,6 +55,7 @@ describe("The genesis library", function () {
 
 		describe("and then instantiating it", function () {
 			var options = { key : "value" };
+			var expectedOptions = _.assign(_.clone(options), { revision : 0 });
 
 			var instance = new Test(options);
 
@@ -63,7 +65,7 @@ describe("The genesis library", function () {
 			});
 
 			it("assigns all attributes", function () {
-				expect(instance, "attributes").to.deep.equal(options);
+				expect(instance, "attributes").to.deep.equal(expectedOptions);
 			});
 
 			it("assigns all methods", function () {
@@ -101,6 +103,7 @@ describe("The genesis library", function () {
 					foo : "bar",
 					key : "value"
 				};
+				var expectedOptions = _.assign(_.clone(options), { revision : 0 });
 
 				var instance = new Subtest(options);
 
@@ -111,7 +114,7 @@ describe("The genesis library", function () {
 				});
 
 				it("assigns all attributes", function () {
-					expect(instance, "attributes").to.deep.equal(options);
+					expect(instance, "attributes").to.deep.equal(expectedOptions);
 				});
 
 				it("assigns all methods", function () {
@@ -151,6 +154,7 @@ describe("The genesis library", function () {
 					foo : "bar",
 					key : "value"
 				};
+				var expectedOptions = _.assign(_.clone(options), { revision : 0 });
 
 				var instance = new Subtest(options);
 
@@ -161,7 +165,7 @@ describe("The genesis library", function () {
 				});
 
 				it("assigns all attributes", function () {
-					expect(instance, "attributes").to.deep.equal(options);
+					expect(instance, "attributes").to.deep.equal(expectedOptions);
 				});
 
 				it("assigns all methods", function () {
@@ -185,6 +189,7 @@ describe("The genesis library", function () {
 				var options = {
 					key : "value"
 				};
+				var expectedOptions = _.assign(_.clone(options), { revision : 0 });
 
 				var instance = new Subtest(options);
 
@@ -195,7 +200,7 @@ describe("The genesis library", function () {
 				});
 
 				it("assigns all attributes", function () {
-					expect(instance, "attributes").to.deep.equal(options);
+					expect(instance, "attributes").to.deep.equal(expectedOptions);
 				});
 
 				it("assigns all methods", function () {

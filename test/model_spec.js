@@ -20,10 +20,12 @@ describe("A model", function () {
 		expect(Object.isFrozen(model), "frozen").to.be.true;
 	});
 
-	it("assigns all attributes", function () {
+	it("assigns all attributes and adds revision", function () {
 		var model = new Model(schema, options);
 
-		expect(model, "attributes").to.deep.equal(options);
+		var expectedOptions = _.merge(_.clone(options), { revision : 0 });
+
+		expect(model, "attributes").to.deep.equal(expectedOptions);
 	});
 
 	it("rejects options not consistent with the schema", function () {
@@ -47,12 +49,33 @@ describe("A model", function () {
 		Model.call(object, schema, options);
 		copy = _.clone(object);
 
+		var expectedOptions = _.merge(_.clone(options), { revision : 0 });
+
 		it("enumerates all attributes", function () {
-			expect(copy, "attributes").to.deep.equal(options);
+			expect(copy, "attributes").to.deep.equal(expectedOptions);
 		});
 
 		it("does not enumerate methods", function () {
 			expect(copy, "methods").not.to.have.property("method");
+		});
+	});
+
+	describe("with an invalid revision attribute", function () {
+		var result;
+
+		before(function () {
+			try {
+				var model = new Model(schema, { key : "value", revision : "invalid" });
+				result = model;
+			}
+			catch (error) {
+				result = error;
+			}
+		});
+
+		it("throws an error", function () {
+			expect(result, "error").to.be.an.instanceOf(Error);
+			expect(result.message, "error message").to.contain("revision");
 		});
 	});
 });
