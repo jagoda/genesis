@@ -114,7 +114,7 @@ describe("A mongo mapper", function () {
 
 			describe("without an index", function () {
 				var Test     = Genesis.create("test");
-				var instance = new Test();
+				var instance = new Test({ name : "test" });
 
 				var error;
 
