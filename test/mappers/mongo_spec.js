@@ -374,6 +374,11 @@ describe("A mongo mapper", function () {
 			})
 			.then(function (data) {
 				result = data;
+				updated = new Test({
+					name     : updated.name,
+					foo      : updated.foo,
+					revision : updated.revision + 1
+				});
 			});
 		});
 
@@ -382,14 +387,43 @@ describe("A mongo mapper", function () {
 		});
 
 		it("returns the model", function () {
-			expect(result, "model").to.equal(updated);
+			expect(result, "model").to.deep.equal(updated);
 		});
 
-		it("inserts the record in the database", function () {
+		it("inserts the record in the database with an incremented revision", function () {
 			return find("test", { name : name })
 			.then(function (results) {
 				expect(results, "results").to.deep.equal([ updated ]);
 			});
+		});
+	});
+
+	describe("updating a record with an invalid revision", function () {
+		var result;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function (data) {
+				var updated = new Test(
+					_.merge(
+						_.clone(data),
+						{ revision : data.revision + 1 }
+					)
+				);
+				return mapper.update(updated);
+			})
+			.catch(function (data) {
+				result = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("throws an error", function () {
+			expect(result, "error").to.be.an.instanceOf(Error);
+			expect(result.message, "message").to.contain("concurrency");
 		});
 	});
 });
