@@ -426,4 +426,84 @@ describe("A mongo mapper", function () {
 			expect(result.message, "message").to.contain("concurrency");
 		});
 	});
+
+	describe("destroying a non-existant record", function () {
+		var error;
+
+		before(function () {
+			return mapper.destroy(instance)
+			.catch(function (data) {
+				error = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("fails", function () {
+			expect(error, "type").to.be.an.instanceOf(Error);
+			expect(error.message, "message").to.contain("does not exist");
+		});
+	});
+
+	describe("destroying an existing record", function () {
+		var result;
+		var stored;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function () {
+				return mapper.destroy(instance);
+			})
+			.then(function (data) {
+				result = data;
+				return mapper.findOne(Test, instance);
+			})
+			.then(function (data) {
+				stored = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("returns the model", function () {
+			expect(result, "model").to.equal(instance);
+		});
+
+		it("removes the record from the data store", function () {
+			expect(stored, "stored").to.be.null;
+		});
+	});
+
+	describe("destroying a record with an invalid revision", function () {
+		var result;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function (data) {
+				var updated = new Test(
+					_.merge(
+						_.clone(data),
+						{ revision : data.revision + 1 }
+					)
+				);
+				return mapper.destroy(updated);
+			})
+			.catch(function (data) {
+				result = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("throws an error", function () {
+			expect(result, "error").to.be.an.instanceOf(Error);
+			expect(result.message, "message").to.contain("concurrency");
+		});
+	});
 });
