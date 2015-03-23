@@ -233,6 +233,8 @@ describe("A mongo mapper", function () {
 			var bar = new Test({ name : "bar" });
 			var foo = new Test({ name : "foo" });
 
+			var close;
+
 			var result;
 
 			before(function () {
@@ -240,6 +242,8 @@ describe("A mongo mapper", function () {
 					mapper.create(bar),
 					mapper.create(foo),
 					function () {
+						close = Sinon.spy(MongoDB.Cursor.prototype, "close");
+
 						return mapper.find(Test, { name : "foo" });
 					}
 				)
@@ -261,6 +265,10 @@ describe("A mongo mapper", function () {
 				result.forEach(function (record, index) {
 					expect(record, "record " + index).to.be.an.instanceOf(Test);
 				});
+			});
+
+			it("closes the query cursor", function () {
+				expect(close.callCount, "close").to.equal(1);
 			});
 		});
 
@@ -527,6 +535,26 @@ describe("A mongo mapper", function () {
 		it("throws an error", function () {
 			expect(result, "error").to.be.an.instanceOf(Error);
 			expect(result.message, "message").to.contain("concurrency");
+		});
+	});
+
+	describe("when disposed", function () {
+		var mapper = new MongoMapper();
+		var result;
+
+		before(function () {
+			return mapper.dispose()
+			.then(function () {
+				return mapper.create(instance);
+			})
+			.catch(function (err) {
+				result = err;
+			});
+		});
+
+		it("throws an error", function () {
+			expect(result, "error").to.be.an.instanceOf(Error);
+			expect(result.message, "message").to.match(/connection was destroyed/i);
 		});
 	});
 });

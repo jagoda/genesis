@@ -314,6 +314,10 @@ describe("A memory mapper", function () {
 	describe("destroying an existing record", function () {
 		var mapper = new MemoryMapper();
 
+		before(function () {
+			return mapper.create(instance);
+		});
+
 		describe("with an object", function () {
 			var instance = { name : name };
 
@@ -332,15 +336,34 @@ describe("A memory mapper", function () {
 			});
 		});
 
+		describe("with a model with an invalid revision", function () {
+			var result;
+
+			before(function () {
+				var updated = new Test(
+					_.merge(
+						_.clone(instance),
+						{ revision : instance.revision + 1 }
+					)
+				);
+				return mapper.destroy(updated)
+				.catch(function (data) {
+					result = data;
+				});
+			});
+
+			it("throws an error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.contain("concurrency");
+			});
+		});
+
 		describe("with a model", function () {
 			var result;
 			var stored;
 
 			before(function () {
-				return mapper.create(instance)
-				.then(function () {
-					return mapper.destroy(instance);
-				})
+				return mapper.destroy(instance)
 				.then(function (data) {
 					result = data;
 					return mapper.findOne(Test, { name : name });
@@ -356,31 +379,6 @@ describe("A memory mapper", function () {
 
 			it("removes the record from the data store", function () {
 				expect(stored, "stored").to.be.null;
-			});
-		});
-
-		describe("with a model with an invalid revision", function () {
-			var result;
-
-			before(function () {
-				return mapper.create(instance)
-				.then(function () {
-					var updated = new Test(
-						_.merge(
-							_.clone(instance),
-							{ revision : instance.revision + 1 }
-						)
-					);
-					return mapper.destroy(updated);
-				})
-				.catch(function (data) {
-					result = data;
-				});
-			});
-
-			it("throws an error", function () {
-				expect(result, "error").to.be.an.instanceOf(Error);
-				expect(result.message, "message").to.contain("concurrency");
 			});
 		});
 	});
