@@ -1,6 +1,6 @@
 {
   "name": "genesis",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A simple library for creating data models in Node.",
   "main": "lib/",
   "scripts": {
