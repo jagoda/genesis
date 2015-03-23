@@ -2,6 +2,7 @@
 var Bluebird     = require("bluebird");
 var Genesis      = require("../../");
 var MemoryMapper = require("../../lib/mappers/memory");
+var _            = require("lodash");
 
 var expect = require("chai").expect;
 
@@ -52,7 +53,7 @@ describe("A memory mapper", function () {
 			describe("without an index", function () {
 				var Test = Genesis.create("test");
 
-				var instance = new Test();
+				var instance = new Test({ name : name });
 
 				var failure;
 
@@ -210,10 +211,6 @@ describe("A memory mapper", function () {
 
 		var instance = new Test({ age : 10, name : name });
 
-		before(function () {
-			return mapper.create(instance);
-		});
-
 		describe("with an object", function () {
 			var newInstance = { age : 13, name : name };
 
@@ -234,12 +231,16 @@ describe("A memory mapper", function () {
 
 		describe("with a model", function () {
 			var newInstance = new Test({ age : 13, name : name });
+			var updatedInstance = new Test(_.merge(_.clone(newInstance), { revision : 1 }));
 
 			var result;
 			var stored;
 
 			before(function () {
-				return mapper.update(newInstance)
+				return mapper.create(instance)
+				.then(function () {
+					return mapper.update(newInstance);
+				})
 				.then(function (data) {
 					result = data;
 					return mapper.findOne(Test, { name : name });
@@ -249,12 +250,45 @@ describe("A memory mapper", function () {
 				});
 			});
 
+			after(function () {
+				return mapper.destroy(result);
+			});
+
 			it("returns the model", function () {
-				expect(result, "result").to.equal(newInstance);
+				expect(result, "result").to.deep.equal(updatedInstance);
 			});
 
 			it("modifies the stored state", function () {
-				expect(stored, "stored").to.deep.equal(newInstance);
+				expect(stored, "stored").to.deep.equal(updatedInstance);
+			});
+		});
+
+		describe("with a model with an invalid revision", function () {
+			var result;
+
+			before(function () {
+				return mapper.create(instance)
+				.then(function () {
+					var updated = new Test(
+						_.merge(
+							_.clone(instance),
+							{ revision : instance.revision + 1 }
+						)
+					);
+					return mapper.update(updated);
+				})
+				.catch(function (data) {
+					result = data;
+				});
+			});
+
+			after(function () {
+				return mapper.destroy(instance);
+			});
+
+			it("throws an error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.contain("concurrency");
 			});
 		});
 	});
@@ -299,6 +333,28 @@ describe("A memory mapper", function () {
 			it("fails", function () {
 				expect(failure, "type").to.be.an.instanceOf(Error);
 				expect(failure.message, "message").to.contain("Model");
+			});
+		});
+
+		describe("with a model with an invalid revision", function () {
+			var result;
+
+			before(function () {
+				var updated = new Test(
+					_.merge(
+						_.clone(instance),
+						{ revision : instance.revision + 1 }
+					)
+				);
+				return mapper.destroy(updated)
+				.catch(function (data) {
+					result = data;
+				});
+			});
+
+			it("throws an error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.contain("concurrency");
 			});
 		});
 

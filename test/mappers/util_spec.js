@@ -15,7 +15,7 @@ describe("The mapper helper", function () {
 
 		it("rejects a non-indexed model", function () {
 			var Test     = Genesis.create("test");
-			var instance = new Test();
+			var instance = new Test({ name : "foo" });
 
 			expect(function () {
 				Util.assertMapperModel(instance);

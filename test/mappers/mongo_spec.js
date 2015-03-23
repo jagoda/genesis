@@ -51,6 +51,10 @@ describe("A mongo mapper", function () {
 		);
 	}
 
+	after(function () {
+		return mapper.dispose();
+	});
+
 	it("has constant static properties", function () {
 		expect(Object.isFrozen(MongoMapper), "frozen").to.be.true;
 	});
@@ -60,6 +64,25 @@ describe("A mongo mapper", function () {
 			"DEFAULT_URL",
 			"mongodb://localhost/test"
 		);
+	});
+
+	describe("with a custom db url", function () {
+		var dbUrl = "mongodb://localhost/custom";
+		var connectSpy;
+
+		before(function () {
+			connectSpy = Sinon.spy(MongoClient, "connectAsync");
+			var customMapper = new MongoMapper(dbUrl);
+			return customMapper.dispose();
+		});
+
+		after(function () {
+			connectSpy.restore();
+		});
+
+		it("connects to the correct db", function () {
+			expect(connectSpy.calledWith(dbUrl), "url").to.be.true;
+		});
 	});
 
 	describe("creating a new record", function () {
@@ -114,7 +137,7 @@ describe("A mongo mapper", function () {
 
 			describe("without an index", function () {
 				var Test     = Genesis.create("test");
-				var instance = new Test();
+				var instance = new Test({ name : "test" });
 
 				var error;
 
@@ -210,6 +233,8 @@ describe("A mongo mapper", function () {
 			var bar = new Test({ name : "bar" });
 			var foo = new Test({ name : "foo" });
 
+			var close;
+
 			var result;
 
 			before(function () {
@@ -217,6 +242,8 @@ describe("A mongo mapper", function () {
 					mapper.create(bar),
 					mapper.create(foo),
 					function () {
+						close = Sinon.spy(MongoDB.Cursor.prototype, "close");
+
 						return mapper.find(Test, { name : "foo" });
 					}
 				)
@@ -238,6 +265,10 @@ describe("A mongo mapper", function () {
 				result.forEach(function (record, index) {
 					expect(record, "record " + index).to.be.an.instanceOf(Test);
 				});
+			});
+
+			it("closes the query cursor", function () {
+				expect(close.callCount, "close").to.equal(1);
 			});
 		});
 
@@ -358,7 +389,172 @@ describe("A mongo mapper", function () {
 
 		it("fails", function () {
 			expect(error, "type").to.be.an.instanceOf(Error);
-			expect(error.message, "message").to.contain("foo");
+			expect(error.message, "message").to.contain("does not exist");
+		});
+	});
+
+	describe("updating an existing record", function () {
+		var result;
+		var updated;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function (data) {
+				updated = new Test({ name : data.name, foo : "bar" });
+				return mapper.update(updated);
+			})
+			.then(function (data) {
+				result = data;
+				updated = new Test({
+					name     : updated.name,
+					foo      : updated.foo,
+					revision : updated.revision + 1
+				});
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("returns the model", function () {
+			expect(result, "model").to.deep.equal(updated);
+		});
+
+		it("inserts the record in the database with an incremented revision", function () {
+			return find("test", { name : name })
+			.then(function (results) {
+				expect(results, "results").to.deep.equal([ updated ]);
+			});
+		});
+	});
+
+	describe("updating a record with an invalid revision", function () {
+		var result;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function (data) {
+				var updated = new Test(
+					_.merge(
+						_.clone(data),
+						{ revision : data.revision + 1 }
+					)
+				);
+				return mapper.update(updated);
+			})
+			.catch(function (data) {
+				result = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("throws an error", function () {
+			expect(result, "error").to.be.an.instanceOf(Error);
+			expect(result.message, "message").to.contain("concurrency");
+		});
+	});
+
+	describe("destroying a non-existant record", function () {
+		var error;
+
+		before(function () {
+			return mapper.destroy(instance)
+			.catch(function (data) {
+				error = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("fails", function () {
+			expect(error, "type").to.be.an.instanceOf(Error);
+			expect(error.message, "message").to.contain("does not exist");
+		});
+	});
+
+	describe("destroying an existing record", function () {
+		var result;
+		var stored;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function () {
+				return mapper.destroy(instance);
+			})
+			.then(function (data) {
+				result = data;
+				return mapper.findOne(Test, instance);
+			})
+			.then(function (data) {
+				stored = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("returns the model", function () {
+			expect(result, "model").to.equal(instance);
+		});
+
+		it("removes the record from the data store", function () {
+			expect(stored, "stored").to.be.null;
+		});
+	});
+
+	describe("destroying a record with an invalid revision", function () {
+		var result;
+
+		before(function () {
+			return mapper.create(instance)
+			.then(function (data) {
+				var updated = new Test(
+					_.merge(
+						_.clone(data),
+						{ revision : data.revision + 1 }
+					)
+				);
+				return mapper.destroy(updated);
+			})
+			.catch(function (data) {
+				result = data;
+			});
+		});
+
+		after(function () {
+			return cleanup();
+		});
+
+		it("throws an error", function () {
+			expect(result, "error").to.be.an.instanceOf(Error);
+			expect(result.message, "message").to.contain("concurrency");
+		});
+	});
+
+	describe("when disposed", function () {
+		var mapper = new MongoMapper();
+		var result;
+
+		before(function () {
+			return mapper.dispose()
+			.then(function () {
+				return mapper.create(instance);
+			})
+			.catch(function (err) {
+				result = err;
+			});
+		});
+
+		it("throws an error", function () {
+			expect(result, "error").to.be.an.instanceOf(Error);
+			expect(result.message, "message").to.match(/connection was destroyed/i);
 		});
 	});
 });

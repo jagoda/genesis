@@ -115,3 +115,7 @@ thrown if a previous version is not in the data store.
 The `MemoryMapper` stores all instances in memory.
 
 [joi]: https://github.com/hapijs/joi "Joi"
+
+#### MongoMapper (dbUrl)
+
+The `MongoMapper` stores all instances in a Mongo database. If no `dbUrl` is specified, the default `mongodb://localhost/test` is used.
