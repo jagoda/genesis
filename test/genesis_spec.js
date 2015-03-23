@@ -3,6 +3,7 @@ var Genesis      = require("..");
 var Joi          = require("joi");
 var MemoryMapper = require("../lib/mappers/memory");
 var Model        = require("../lib/model");
+var MongoMapper  = require("../lib/mappers/mongo");
 var _            = require("lodash");
 
 var expect = require("chai").expect;
@@ -14,6 +15,10 @@ describe("The genesis library", function () {
 
 	it("exports the memory mapper", function () {
 		expect(Genesis, "memory mapper").to.have.property("MemoryMapper", MemoryMapper);
+	});
+
+	it("exports the MongoDB mapper", function () {
+		expect(Genesis, "mongo").to.have.property("MongoMapper", MongoMapper);
 	});
 
 	describe("creating a basic model", function () {
