@@ -1,14 +1,19 @@
 "use strict";
-var Genesis = require("..");
-var Joi     = require("joi");
-var Model   = require("../lib/model");
-var _       = require("lodash");
+var Genesis     = require("..");
+var Joi         = require("joi");
+var Model       = require("../lib/model");
+var MongoMapper = require("../lib/mappers/mongo");
+var _           = require("lodash");
 
 var expect = require("chai").expect;
 
 describe("The genesis library", function () {
 	it("exports the model class", function () {
 		expect(Genesis, "model").to.have.property("Model", Model);
+	});
+
+	it("exports the MongoDB mapper", function () {
+		expect(Genesis, "mongo").to.have.property("MongoMapper", MongoMapper);
 	});
 
 	describe("creating a basic model", function () {
