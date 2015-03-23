@@ -66,6 +66,25 @@ describe("A mongo mapper", function () {
 		);
 	});
 
+	describe("with a custom db url", function () {
+		var dbUrl = "mongodb://localhost/custom";
+		var connectSpy;
+
+		before(function () {
+			connectSpy = Sinon.spy(MongoClient, "connectAsync");
+			var customMapper = new MongoMapper(dbUrl);
+			return customMapper.dispose();
+		});
+
+		after(function () {
+			connectSpy.restore();
+		});
+
+		it("connects to the correct db", function () {
+			expect(connectSpy.calledWith(dbUrl), "url").to.be.true;
+		});
+	});
+
 	describe("creating a new record", function () {
 		describe("from an object", function () {
 			var instance = Object.create(null);
