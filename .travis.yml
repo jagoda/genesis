@@ -11,3 +11,8 @@ deploy:
     branch: master
     tags: true
     repo: jagoda/genesis
+before_install:
+- sudo apt-get -y purge mongodb-10gen
+- sudo apt-get -y update
+- sudo apt-get -y install mongodb-org
+- sudo service mongod start
