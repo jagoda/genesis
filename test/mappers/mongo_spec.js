@@ -51,6 +51,10 @@ describe("A mongo mapper", function () {
 		);
 	}
 
+	after(function () {
+		return mapper.dispose();
+	});
+
 	it("has constant static properties", function () {
 		expect(Object.isFrozen(MongoMapper), "frozen").to.be.true;
 	});
