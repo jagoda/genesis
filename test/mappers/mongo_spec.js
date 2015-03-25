@@ -297,6 +297,22 @@ describe("A mongo mapper", function () {
 				expect(error.message, "message").to.contain(failure.message);
 			});
 		});
+
+		describe("without passing a model type", function () {
+			var result;
+
+			before(function () {
+				return mapper.find({ name : "foo" })
+				.catch(function (err) {
+					result = err;
+				});
+			});
+
+			it("throws a useful error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.match(/model type/i);
+			});
+		});
 	});
 
 	describe("looking up an individual record", function () {
@@ -369,6 +385,22 @@ describe("A mongo mapper", function () {
 			it("fails", function () {
 				expect(error, "type").to.be.an.instanceOf(Error);
 				expect(error.message, "message").to.contain(failure.message);
+			});
+		});
+
+		describe("without passing a model type", function () {
+			var result;
+
+			before(function () {
+				return mapper.findOne({ name : "foo" })
+				.catch(function (err) {
+					result = err;
+				});
+			});
+
+			it("throws a useful error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.match(/model type/i);
 			});
 		});
 	});
