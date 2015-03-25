@@ -2,13 +2,16 @@
 var Bluebird     = require("bluebird");
 var Genesis      = require("../../");
 var MemoryMapper = require("../../lib/mappers/memory");
+var _            = require("lodash");
 
 var expect = require("chai").expect;
 
 describe("A memory mapper", function () {
-	var Test = Genesis.create({ index : "foo" });
+	var name = "foo";
 
-	var instance = new Test({ foo : "bar" });
+	var Test = Genesis.create("test", { index : "name" });
+
+	var instance = new Test({ name : name });
 
 	describe("creating a new record", function () {
 		var mapper = new MemoryMapper();
@@ -20,14 +23,9 @@ describe("A memory mapper", function () {
 
 			before(function () {
 				return mapper.create(instance)
-				.then(
-					function () {
-						throw new Error("Should not succeed.");
-					},
-					function (error) {
-						failure = error;
-					}
-				);
+				.catch(function (error) {
+					failure = error;
+				});
 			});
 
 			it("fails", function () {
@@ -53,22 +51,17 @@ describe("A memory mapper", function () {
 			});
 
 			describe("without an index", function () {
-				var Test = Genesis.create();
+				var Test = Genesis.create("test");
 
-				var instance = new Test();
+				var instance = new Test({ name : name });
 
 				var failure;
 
 				before(function () {
 					return mapper.create(instance)
-					.then(
-						function () {
-							throw new Error("Should not succeed.");
-						},
-						function (error) {
-							failure = error;
-						}
-					);
+					.catch(function (error) {
+						failure = error;
+					});
 				});
 
 				it("fails", function () {
@@ -89,14 +82,9 @@ describe("A memory mapper", function () {
 			.then(function (instance) {
 				return mapper.create(instance);
 			})
-			.then(
-				function () {
-					throw new Error("Should not succeed.");
-				},
-				function (error) {
-					failure = error;
-				}
-			);
+			.catch(function (error) {
+				failure = error;
+			});
 		});
 
 		it("fails", function () {
@@ -105,16 +93,14 @@ describe("A memory mapper", function () {
 		});
 	});
 
-	describe("looking multiple records", function () {
+	describe("looking up multiple records", function () {
 		describe("with a query that doesn't match", function () {
 			var mapper = new MemoryMapper();
-
-			var Test = Genesis.create();
 
 			var result;
 
 			before(function () {
-				return mapper.find(Test, { id : "foo" })
+				return mapper.find(Test, { id : name })
 				.then(function (data) {
 					result = data;
 				});
@@ -127,8 +113,6 @@ describe("A memory mapper", function () {
 
 		describe("with a query that matches", function () {
 			var mapper = new MemoryMapper();
-
-			var Test = Genesis.create({ index : "name" });
 
 			var bar = new Test({ name : "bar" });
 			var foo = new Test({ name : "foo" });
@@ -182,10 +166,6 @@ describe("A memory mapper", function () {
 	describe("looking up an individual record", function () {
 		var mapper = new MemoryMapper();
 
-		var Test = Genesis.create({ index : "name" });
-
-		var instance = new Test({ name : "foo" });
-
 		before(function () {
 			return mapper.create(instance);
 		});
@@ -194,7 +174,7 @@ describe("A memory mapper", function () {
 			var result;
 
 			before(function () {
-				return mapper.findOne(Test, { name : "bar" })
+				return mapper.findOne(Test, { id : name })
 				.then(function (data) {
 					result = data;
 				});
@@ -209,7 +189,7 @@ describe("A memory mapper", function () {
 			var result;
 
 			before(function () {
-				return mapper.findOne(Test, { name : "foo" })
+				return mapper.findOne(Test, { name : name })
 				.then(function (data) {
 					result = data;
 				});
@@ -245,22 +225,13 @@ describe("A memory mapper", function () {
 	describe("updating a non-existant record", function () {
 		var mapper = new MemoryMapper();
 
-		var Test = Genesis.create({ index : "name" });
-
-		var instance = new Test({ name : "foo" });
-
 		var failure;
 
 		before(function () {
 			return mapper.update(instance)
-			.then(
-				function () {
-					throw new Error("Should not succeed.");
-				},
-				function (error) {
-					failure = error;
-				}
-			);
+			.catch(function (error) {
+				failure = error;
+			});
 		});
 
 		it("fails", function () {
@@ -272,29 +243,18 @@ describe("A memory mapper", function () {
 	describe("updating an existing record", function () {
 		var mapper = new MemoryMapper();
 
-		var Test = Genesis.create({ index : "name" });
-
-		var instance = new Test({ age : 10, name : "foo" });
-
-		before(function () {
-			return mapper.create(instance);
-		});
+		var instance = new Test({ age : 10, name : name });
 
 		describe("with an object", function () {
-			var newInstance = { age : 13, name : "foo" };
+			var newInstance = { age : 13, name : name };
 
 			var failure;
 
 			before(function () {
 				return mapper.update(newInstance)
-				.then(
-					function () {
-						throw new Error("Should not succeed.");
-					},
-					function (error) {
-						failure = error;
-					}
-				);
+				.catch(function (error) {
+					failure = error;
+				});
 			});
 
 			it("fails", function () {
@@ -304,28 +264,65 @@ describe("A memory mapper", function () {
 		});
 
 		describe("with a model", function () {
-			var newInstance = new Test({ age : 13, name : "foo" });
+			var newInstance = new Test({ age : 13, name : name });
+			var updatedInstance = new Test(_.merge(_.clone(newInstance), { revision : 1 }));
 
 			var result;
 			var stored;
 
 			before(function () {
-				return mapper.update(newInstance)
+				return mapper.create(instance)
+				.then(function () {
+					return mapper.update(newInstance);
+				})
 				.then(function (data) {
 					result = data;
-					return mapper.findOne(Test, { name : "foo" });
+					return mapper.findOne(Test, { name : name });
 				})
 				.then(function (data) {
 					stored = data;
 				});
 			});
 
+			after(function () {
+				return mapper.destroy(result);
+			});
+
 			it("returns the model", function () {
-				expect(result, "result").to.equal(newInstance);
+				expect(result, "result").to.deep.equal(updatedInstance);
 			});
 
 			it("modifies the stored state", function () {
-				expect(stored, "stored").to.deep.equal(newInstance);
+				expect(stored, "stored").to.deep.equal(updatedInstance);
+			});
+		});
+
+		describe("with a model with an invalid revision", function () {
+			var result;
+
+			before(function () {
+				return mapper.create(instance)
+				.then(function () {
+					var updated = new Test(
+						_.merge(
+							_.clone(instance),
+							{ revision : instance.revision + 1 }
+						)
+					);
+					return mapper.update(updated);
+				})
+				.catch(function (data) {
+					result = data;
+				});
+			});
+
+			after(function () {
+				return mapper.destroy(instance);
+			});
+
+			it("throws an error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.contain("concurrency");
 			});
 		});
 	});
@@ -333,22 +330,13 @@ describe("A memory mapper", function () {
 	describe("destroying a non-existant record", function () {
 		var mapper = new MemoryMapper();
 
-		var Test = Genesis.create({ index : "name" });
-
-		var instance = new Test({ name : "foo" });
-
 		var failure;
 
 		before(function () {
 			return mapper.destroy(instance)
-			.then(
-				function () {
-					throw new Error("Should not succeed.");
-				},
-				function (error) {
-					failure = error;
-				}
-			);
+			.catch(function (error) {
+				failure = error;
+			});
 		});
 
 		it("fails", function () {
@@ -360,34 +348,47 @@ describe("A memory mapper", function () {
 	describe("destroying an existing record", function () {
 		var mapper = new MemoryMapper();
 
-		var Test = Genesis.create({ index : "name" });
-
-		var instance = new Test({ name : "foo" });
-
 		before(function () {
 			return mapper.create(instance);
 		});
 
 		describe("with an object", function () {
-			var instance = { name : "foo" };
+			var instance = { name : name };
 
 			var failure;
 
 			before(function () {
 				return mapper.destroy(instance)
-				.then(
-					function () {
-						throw new Error("Should not succeed.");
-					},
-					function (error) {
-						failure = error;
-					}
-				);
+				.catch(function (error) {
+					failure = error;
+				});
 			});
 
 			it("fails", function () {
 				expect(failure, "type").to.be.an.instanceOf(Error);
 				expect(failure.message, "message").to.contain("Model");
+			});
+		});
+
+		describe("with a model with an invalid revision", function () {
+			var result;
+
+			before(function () {
+				var updated = new Test(
+					_.merge(
+						_.clone(instance),
+						{ revision : instance.revision + 1 }
+					)
+				);
+				return mapper.destroy(updated)
+				.catch(function (data) {
+					result = data;
+				});
+			});
+
+			it("throws an error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.contain("concurrency");
 			});
 		});
 
@@ -399,7 +400,7 @@ describe("A memory mapper", function () {
 				return mapper.destroy(instance)
 				.then(function (data) {
 					result = data;
-					return mapper.findOne(Test, { name : "foo" });
+					return mapper.findOne(Test, { name : name });
 				})
 				.then(function (data) {
 					stored = data;
@@ -413,6 +414,41 @@ describe("A memory mapper", function () {
 			it("removes the record from the data store", function () {
 				expect(stored, "stored").to.be.null;
 			});
+		});
+	});
+
+	describe("storing two different model types", function () {
+		var Subtest = Test.extend("subtest");
+
+		var mapper = new MemoryMapper();
+		var subtest = new Subtest({ name : name, type : "subtest" });
+		var test    = new Test({ name : name, type : "test" });
+
+		var subtestResult;
+		var testResult;
+
+		before(function () {
+			return Bluebird.all([
+				mapper.create(subtest),
+				mapper.create(test)
+			])
+			.then(function () {
+				var query = { name : name };
+
+				return Bluebird.all([
+					mapper.findOne(Subtest, query),
+					mapper.findOne(Test, query)
+				]);
+			})
+			.spread(function (subtest, test) {
+				subtestResult = subtest;
+				testResult    = test;
+			});
+		});
+
+		it("returns both results", function () {
+			expect(subtestResult, "subtest").to.have.property("type", "subtest");
+			expect(testResult, "test").to.have.property("type", "test");
 		});
 	});
 });
