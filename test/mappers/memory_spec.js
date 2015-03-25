@@ -159,6 +159,24 @@ describe("A memory mapper", function () {
 				});
 			});
 		});
+
+		describe("without passing a model type", function () {
+			var mapper = new MemoryMapper();
+
+			var result;
+
+			before(function () {
+				return mapper.find({ name : "foo" })
+				.catch(function (err) {
+					result = err;
+				});
+			});
+
+			it("throws a useful error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.match(/model type/i);
+			});
+		});
 	});
 
 	describe("looking up an individual record", function () {
@@ -204,6 +222,22 @@ describe("A memory mapper", function () {
 
 			it("returns a model instance", function () {
 				expect(result, "type").to.be.an.instanceOf(Test);
+			});
+		});
+
+		describe("without passing a model type", function () {
+			var result;
+
+			before(function () {
+				return mapper.findOne({ name : "foo" })
+				.catch(function (err) {
+					result = err;
+				});
+			});
+
+			it("throws a useful error", function () {
+				expect(result, "error").to.be.an.instanceOf(Error);
+				expect(result.message, "message").to.match(/model type/i);
 			});
 		});
 	});
