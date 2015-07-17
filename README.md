@@ -9,10 +9,11 @@ genesis
 
 ## Basics
 
-### Genesis.create (options)
+### Genesis.create (name, options)
 
 Creates a new `Model` class.
 
+ + **name** -- The name of the data model. Also, the name of the MongoDB collection for the model if the MongoDB mapper is used.
  + **options** -- A hash of options describing a new data model.
 
 **Options:**
